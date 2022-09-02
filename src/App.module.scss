@@ -1,0 +1,44 @@
+:root {
+  --background: black;
+  --foreground: white;
+}
+
+html,
+body,
+#root,
+#main {
+  width: 100%;
+  height: 100%;
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+.selected {
+  background-color: var(--foreground);
+  color: var(--background);
+}
+
+.content {
+  margin: 0 auto;
+  // required for images enclosed in p tags
+  text-align: center;
+  & img {
+    max-width: 100%;
+  }
+}
+
+.anchorRow {
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  flex-direction: row;
+  gap: 2rem;
+
+  & > a {
+    text-decoration: none;
+    color: white;
+    font-size: 2rem;
+  }
+}
