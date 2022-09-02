@@ -12,6 +12,7 @@ import { createMutable } from "solid-js/store";
 
 // import logo from "./logo.svg";
 import styles from "./App.module.scss";
+import { SelectorEdit } from "./Selector";
 
 interface Book {
   name: string;
@@ -19,9 +20,10 @@ interface Book {
   content: Selector;
   next: Selector;
   prev: Selector;
+  blacklist: Selector[];
 }
 
-interface Selector {
+export interface Selector {
   value: string;
   type: "css" | "innerHTML";
 }
@@ -60,6 +62,9 @@ const App: Component = () => {
   });
 
   const navigate = (e: MouseEvent) => {
+    setState("/");
+    // navigate to custom `/read` url
+    history.pushState({ state: "/", selected: selected() }, "", "/");
     e.preventDefault();
   };
 
@@ -86,7 +91,7 @@ const App: Component = () => {
   });
 
   return (
-    <div id={styles.main}>
+    <div id={styles.main} class={state() === '/' ? styles.root : ''}>
       <Switch fallback={<></>}>
         <Match when={state() === "/"}>
           <div>
@@ -107,8 +112,8 @@ const App: Component = () => {
                     value: "",
                     type: "innerHTML",
                   },
+                  blacklist: [],
                 });
-                console.log("updated");
               }}
             >
               +
@@ -169,58 +174,21 @@ const App: Component = () => {
               </label>
               <Index each={["prev", "next", "content"]}>
                 {(p) => (
-                  <div>
-                    <label>
-                      {p()} value
-                      <input
-                        onInput={(e: InputEvent) => {
-                          (
-                            books[selected()][p() as keyof Book] as Selector
-                          ).value = (e.target as any).value;
-                        }}
-                        value={
-                          (books[selected()][p() as keyof Book] as Selector)
-                            .value
-                        }
-                      ></input>
-                    </label>
-                    <label>
-                      css
-                      <input
-                        type="radio"
-                        name={`${p()}-type`}
-                        value="selector"
-                        onClick={() =>
-                          ((
-                            books[selected()][p() as keyof Book] as Selector
-                          ).type = "css")
-                        }
-                        checked={
-                          (books[selected()][p() as keyof Book] as Selector)
-                            .type === "css"
-                        }
-                      ></input>
-                    </label>
-                    <label>
-                      innerHTML
-                      <input
-                        type="radio"
-                        name={`${p()}-type`}
-                        value="innerHTML"
-                        onClick={() =>
-                          ((
-                            books[selected()][p() as keyof Book] as Selector
-                          ).type = "innerHTML")
-                        }
-                        checked={
-                          (books[selected()][p() as keyof Book] as Selector)
-                            .type === "innerHTML"
-                        }
-                      ></input>
-                    </label>
-                  </div>
+                  <SelectorEdit
+                    ident={p()}
+                    selector={books[selected()][p() as keyof Book] as Selector}
+                  />
                 )}
               </Index>
+              <Index each={books[selected()].blacklist}>
+                {(_, i) => (
+                  <SelectorEdit
+                    ident={`blacklist-${i}`}
+                    selector={books[selected()].blacklist[i]}
+                  />
+                )}
+              </Index>
+              <button>+</button>
             </div>
           </Show>
         </Match>
