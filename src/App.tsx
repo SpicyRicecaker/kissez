@@ -61,40 +61,7 @@ const App: Component = () => {
     max: 0,
   } as Buffer);
 
-  class MultipleSelected {
-    store: Signal<boolean>;
-    active: Set<number>;
-    constructor() {
-      this.store = createSignal(false);
-      this.active = new Set();
-    }
-
-    get(): Set<number> {
-      this.store[0]();
-      return this.active;
-    }
-
-    has(n: number): boolean {
-      return this.active.has(n);
-    }
-
-    delete(n: number) {
-      this.active.delete(n);
-      this.store[1](true);
-    }
-
-    add(n: number) {
-      this.active.add(n);
-      this.store[1](true);
-    }
-
-    clear() {
-      this.active.clear();
-      this.store[1](true);
-    }
-  }
-
-  const multipleSelected = new MultipleSelected();
+  const multipleSelected = createMutable([] as boolean[]);
 
   const [state, setState] = createSignal("/" as State);
 
@@ -135,6 +102,13 @@ const App: Component = () => {
         await res.text(),
         "text/html"
       );
+
+      // createEffect(() => {
+      //   console.log(multipleSelected[7]);
+      //   console.log(buffer.active);
+      //   console.log(buffer.max);
+      //   console.log(buffer.min);
+      // });
 
       console.log("rerunning parsing of document", books[selected()].url);
 
@@ -189,12 +163,25 @@ const App: Component = () => {
               <div
                 onClick={(e: MouseEvent) => {
                   if (e.ctrlKey || e.metaKey) {
-                    console.log("hi");
-                    if (multipleSelected.has(i())) {
-                      multipleSelected.delete(i());
+                    if (multipleSelected[i()] === true) {
+                      multipleSelected[i()] = false;
                     } else {
-                      multipleSelected.add(i());
+                      multipleSelected[i()] = true;
                     }
+                    // console.log(multipleSelected[i()]);
+                    // console.log(
+                    //   (multipleSelected[i()] === true) !==
+                    //     (buffer.active &&
+                    //       buffer.min <= i() &&
+                    //       i() <= buffer.max)
+                    // );
+                    // console.log(multipleSelected[i()] === true);
+                    // console.log(
+                    //   buffer.active && buffer.min <= i() && i() <= buffer.max
+                    // );
+                    // if and only if the pivot exists in the range of existing
+                    // buffers, set that to the new pivot, then flush the
+                    // current buffer
                     return;
                   }
 
@@ -205,6 +192,10 @@ const App: Component = () => {
                       buffer.active = true;
                       buffer.min = Math.min(i(), selected());
                       buffer.max = Math.max(i(), selected());
+                      // buffer absorbs multiple selected
+                      // for (let i = buffer.min; i <= buffer.max; i++) {
+                      //   multipleSelected[i] = false;
+                      // }
                     }
                     return;
                   }
@@ -222,14 +213,15 @@ const App: Component = () => {
                     setSelected(i());
                     // flush all multiple selects and buffers
                     buffer.active = false;
-                    multipleSelected.clear();
+                    while (multipleSelected.length !== 0) {
+                      multipleSelected.pop();
+                    }
                   }
                 }}
                 class={`${
                   selected() === i() ||
-                  (multipleSelected.has(i()) !== buffer.active &&
-                    buffer.min <= i() &&
-                    i() <= buffer.max)
+                  (multipleSelected[i()] === true) ||
+                    (buffer.active && buffer.min <= i() && i() <= buffer.max)
                     ? styles.selected
                     : ""
                 } ${styles.book}`}
@@ -279,9 +271,30 @@ const App: Component = () => {
           </Show>
         </Match>
         <Match when={state() === "/read"}>
-          <a href="/" onClick={navigate}>
-            &lt;
-          </a>
+          <div class={styles.anchorRow}>
+            <a href="/" onClick={navigate}>
+              &lt;
+            </a>
+            <a
+              ref={prevAnchor!}
+              onClick={(e) => {
+                e.preventDefault();
+                // console.log((e.target as any).href, books[selected()].url);
+                books[selected()].url = prevAnchor.href;
+              }}
+            >
+              prev
+            </a>
+            <a
+              ref={nextAnchor!}
+              onClick={(e) => {
+                e.preventDefault();
+                books[selected()].url = nextAnchor.href;
+              }}
+            >
+              next
+            </a>
+          </div>
           <div class={styles.content} ref={contentDiv!}></div>
           <div class={styles.anchorRow}>
             <a
