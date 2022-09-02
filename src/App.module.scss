@@ -51,3 +51,8 @@ body,
     font-size: 2rem;
   }
 }
+
+.book {
+  user-select: none;
+  -webkit-user-select: none; 
+}

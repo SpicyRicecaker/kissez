@@ -6,6 +6,7 @@ import {
   Index,
   Match,
   Show,
+  type Signal,
   Switch,
 } from "solid-js";
 import { createMutable } from "solid-js/store";
@@ -30,6 +31,11 @@ export interface Selector {
 
 type State = "/" | "/read";
 
+enum EditingMode {
+  Regular,
+  Multiple,
+}
+
 const App: Component = () => {
   const books: Book[] = createMutable(
     JSON.parse(localStorage.getItem("books") || "[]") as Book[]
@@ -40,6 +46,55 @@ const App: Component = () => {
   });
 
   const [selected, setSelected] = createSignal(-1);
+
+  const [editingMode, setEditingMode] = createSignal(EditingMode.Regular);
+
+  interface Buffer {
+    active: boolean;
+    min: number;
+    max: number;
+  }
+
+  const buffer = createMutable({
+    active: false,
+    min: 0,
+    max: 0,
+  } as Buffer);
+
+  class MultipleSelected {
+    store: Signal<boolean>;
+    active: Set<number>;
+    constructor() {
+      this.store = createSignal(false);
+      this.active = new Set();
+    }
+
+    get(): Set<number> {
+      this.store[0]();
+      return this.active;
+    }
+
+    has(n: number): boolean {
+      return this.active.has(n);
+    }
+
+    delete(n: number) {
+      this.active.delete(n);
+      this.store[1](true);
+    }
+
+    add(n: number) {
+      this.active.add(n);
+      this.store[1](true);
+    }
+
+    clear() {
+      this.active.clear();
+      this.store[1](true);
+    }
+  }
+
+  const multipleSelected = new MultipleSelected();
 
   const [state, setState] = createSignal("/" as State);
 
@@ -91,7 +146,7 @@ const App: Component = () => {
   });
 
   return (
-    <div id={styles.main} class={state() === '/' ? styles.root : ''}>
+    <div id={styles.main} class={state() === "/" ? styles.root : ""}>
       <Switch fallback={<></>}>
         <Match when={state() === "/"}>
           <div>
@@ -132,7 +187,28 @@ const App: Component = () => {
           <For each={books}>
             {(book, i) => (
               <div
-                onClick={() => {
+                onClick={(e: MouseEvent) => {
+                  if (e.ctrlKey || e.metaKey) {
+                    console.log("hi");
+                    if (multipleSelected.has(i())) {
+                      multipleSelected.delete(i());
+                    } else {
+                      multipleSelected.add(i());
+                    }
+                    return;
+                  }
+
+                  if (e.shiftKey) {
+                    e.preventDefault();
+                    if (selected() !== -1) {
+                      // for every key from selected to and including current selection, revert its selected status
+                      buffer.active = true;
+                      buffer.min = Math.min(i(), selected());
+                      buffer.max = Math.max(i(), selected());
+                    }
+                    return;
+                  }
+
                   if (i() === selected()) {
                     // then set state to reading
                     setState("/read");
@@ -144,9 +220,19 @@ const App: Component = () => {
                     );
                   } else {
                     setSelected(i());
+                    // flush all multiple selects and buffers
+                    buffer.active = false;
+                    multipleSelected.clear();
                   }
                 }}
-                class={selected() === i() ? styles.selected : ""}
+                class={`${
+                  selected() === i() ||
+                  (multipleSelected.has(i()) !== buffer.active &&
+                    buffer.min <= i() &&
+                    i() <= buffer.max)
+                    ? styles.selected
+                    : ""
+                } ${styles.book}`}
               >
                 {book.name}
               </div>
