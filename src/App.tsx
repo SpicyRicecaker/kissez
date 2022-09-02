@@ -6,10 +6,14 @@ import {
   Index,
   Match,
   Show,
-  type Signal,
   Switch,
+  batch,
 } from "solid-js";
-import { createMutable } from "solid-js/store";
+import {
+  createMutable,
+  modifyMutable,
+  reconcile,
+} from "solid-js/store";
 
 // import logo from "./logo.svg";
 import styles from "./App.module.scss";
@@ -48,18 +52,6 @@ const App: Component = () => {
   const [selected, setSelected] = createSignal(-1);
 
   const [editingMode, setEditingMode] = createSignal(EditingMode.Regular);
-
-  interface Buffer {
-    active: boolean;
-    min: number;
-    max: number;
-  }
-
-  const buffer = createMutable({
-    active: false,
-    min: 0,
-    max: 0,
-  } as Buffer);
 
   const multipleSelected = createMutable([] as boolean[]);
 
@@ -149,10 +141,24 @@ const App: Component = () => {
             </div>
             <div
               onClick={() => {
-                if (selected() !== -1) {
-                  books.splice(selected(), 1);
-                  setSelected(-1);
+                if (selected() === -1) {
+                  return;
                 }
+                if (multipleSelected.length !== 0) {
+                  modifyMutable(
+                    books,
+                    reconcile(books.filter((_, i) => !multipleSelected[i]))
+                  );
+
+                  batch(() => {
+                    while (multipleSelected.length !== 0) {
+                      multipleSelected.pop();
+                    }
+                  });
+                } else {
+                  books.splice(selected(), 1);
+                }
+                setSelected(-1);
               }}
             >
               -
@@ -189,13 +195,18 @@ const App: Component = () => {
                     e.preventDefault();
                     if (selected() !== -1) {
                       // for every key from selected to and including current selection, revert its selected status
-                      buffer.active = true;
-                      buffer.min = Math.min(i(), selected());
-                      buffer.max = Math.max(i(), selected());
-                      // buffer absorbs multiple selected
-                      // for (let i = buffer.min; i <= buffer.max; i++) {
-                      //   multipleSelected[i] = false;
-                      // }
+                      // buffer.active = true;
+                      const min = Math.min(i(), selected());
+                      const max = Math.max(i(), selected());
+                      batch(() => {
+                        while (multipleSelected.length !== 0) {
+                          multipleSelected.pop();
+                        }
+                        // buffer absorbs multiple selected
+                        for (let x = min; x <= max; x++) {
+                          multipleSelected[x] = true;
+                        }
+                      });
                     }
                     return;
                   }
@@ -212,16 +223,15 @@ const App: Component = () => {
                   } else {
                     setSelected(i());
                     // flush all multiple selects and buffers
-                    buffer.active = false;
-                    while (multipleSelected.length !== 0) {
-                      multipleSelected.pop();
-                    }
+                    batch(() => {
+                      while (multipleSelected.length !== 0) {
+                        multipleSelected.pop();
+                      }
+                    });
                   }
                 }}
                 class={`${
-                  selected() === i() ||
-                  (multipleSelected[i()] === true) ||
-                    (buffer.active && buffer.min <= i() && i() <= buffer.max)
+                  selected() === i() || multipleSelected[i()] === true
                     ? styles.selected
                     : ""
                 } ${styles.book}`}
@@ -266,7 +276,16 @@ const App: Component = () => {
                   />
                 )}
               </Index>
-              <button>+</button>
+              <button
+                onClick={() =>
+                  books[selected()].blacklist.push({
+                    value: "",
+                    type: "css",
+                  } as Selector)
+                }
+              >
+                +
+              </button>
             </div>
           </Show>
         </Match>
