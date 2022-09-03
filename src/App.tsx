@@ -9,11 +9,7 @@ import {
   Switch,
   batch,
 } from "solid-js";
-import {
-  createMutable,
-  modifyMutable,
-  reconcile,
-} from "solid-js/store";
+import { createMutable, modifyMutable, reconcile } from "solid-js/store";
 
 // import logo from "./logo.svg";
 import styles from "./App.module.scss";
@@ -95,14 +91,36 @@ const App: Component = () => {
         "text/html"
       );
 
-      // createEffect(() => {
-      //   console.log(multipleSelected[7]);
-      //   console.log(buffer.active);
-      //   console.log(buffer.max);
-      //   console.log(buffer.min);
-      // });
-
-      console.log("rerunning parsing of document", books[selected()].url);
+      // console.log("rerunning parsing of document", books[selected()].url);
+      for (let i = 0; i < books[selected()].blacklist.length; i++) {
+        switch (books[selected()].blacklist[i].type) {
+          case "css": {
+            cDocument
+              .querySelector(books[selected()].blacklist[i].value)
+              ?.remove();
+            break;
+          }
+          case "innerHTML": {
+            // xpath
+            (
+              cDocument.evaluate(
+                `//*[text()['${
+                  books[selected()].blacklist[i].value
+                }' = normalize-space()]]`,
+                cDocument,
+                null,
+                // see https://developer.mozilla.org/en-US/docs/Web/XPath/Introduction_to_using_XPath_in_JavaScript
+                // any unordered node is like `find()`, it gets the first node
+                XPathResult.FIRST_ORDERED_NODE_TYPE,
+                null
+              )?.singleNodeValue as HTMLElement | null
+            )?.remove();
+          }
+          default: {
+            break;
+          }
+        }
+      }
 
       contentDiv.innerHTML = matchValue(books[selected()].content, cDocument);
 
@@ -270,10 +288,17 @@ const App: Component = () => {
               </Index>
               <Index each={books[selected()].blacklist}>
                 {(_, i) => (
-                  <SelectorEdit
-                    ident={`blacklist-${i}`}
-                    selector={books[selected()].blacklist[i]}
-                  />
+                  <>
+                    <SelectorEdit
+                      ident={`blacklist-${i}`}
+                      selector={books[selected()].blacklist[i]}
+                    />
+                    <button
+                      onClick={() => books[selected()].blacklist.splice(i, 1)}
+                    >
+                      -
+                    </button>
+                  </>
                 )}
               </Index>
               <button
@@ -346,17 +371,18 @@ export default App;
 
 function findInnerHTML(value: string, doc: Document): string {
   // Search all nodes for text that contains value
-  const iterator = doc.evaluate(
+  const res = doc.evaluate(
     `//*[text()['${value}' = normalize-space()]]`,
     doc,
     null,
-    XPathResult.UNORDERED_NODE_ITERATOR_TYPE,
+    // see https://developer.mozilla.org/en-US/docs/Web/XPath/Introduction_to_using_XPath_in_JavaScript
+    // any unordered node is like `find()`, it gets the first node
+    XPathResult.FIRST_ORDERED_NODE_TYPE,
     null
   );
-  const next = iterator.iterateNext() as HTMLElement;
 
-  if (next) {
-    let node: HTMLElement | null = next;
+  if (res.singleNodeValue) {
+    let node: HTMLElement | null = res.singleNodeValue as HTMLElement;
     do {
       if (node.hasAttribute("href")) {
         return (node as HTMLAnchorElement).href;
@@ -374,19 +400,16 @@ function matchValue(inquisitor: Selector, doc: Document): string {
       return findInnerHTML(inquisitor.value, doc);
     }
     case "css": {
-      return findSelector(inquisitor.value, doc);
+      const el = doc.querySelector(inquisitor.value);
+      if (el) {
+        return el.innerHTML;
+      } else {
+        return "";
+      }
     }
     default: {
+      // unreachable
       return "";
     }
-  }
-}
-
-function findSelector(value: string, doc: Document): string {
-  const el = doc.querySelector(value);
-  if (el) {
-    return el.innerHTML;
-  } else {
-    return "";
   }
 }

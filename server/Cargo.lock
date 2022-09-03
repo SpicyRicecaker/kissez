@@ -1145,6 +1145,7 @@ dependencies = [
  "ammonia",
  "awc",
  "serde",
+ "serde_json",
 ]
 
 [[package]]
