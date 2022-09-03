@@ -22,10 +22,10 @@ pub enum Selector {
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Book {
-    name: String,
-    url: String,
-    content: Selector,
-    next: Selector,
-    prev: Selector,
-    blacklist: Vec<Selector>,
+    pub name: String,
+    pub url: String,
+    pub content: Selector,
+    pub next: Selector,
+    pub prev: Selector,
+    pub blacklist: Vec<Selector>,
 }

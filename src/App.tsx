@@ -9,7 +9,7 @@ import {
   Switch,
   batch,
 } from "solid-js";
-import { createMutable, modifyMutable, reconcile } from "solid-js/store";
+import { createMutable, modifyMutable, reconcile, unwrap } from "solid-js/store";
 
 // import logo from "./logo.svg";
 import styles from "./App.module.scss";
@@ -80,8 +80,12 @@ const App: Component = () => {
 
   createEffect(async () => {
     if (state() === "/read" && contentDiv) {
+      console.log(JSON.stringify(unwrap(books[selected()])));
       // let res = await fetch(`/asdf.html`);
-      let res = await fetch(`/curl?url=${books[selected()].url}`);
+      let res = await fetch(`/curl`, {
+        method: "POST",
+        body: JSON.stringify(unwrap(books[selected()])),
+      });
       if (!res.ok) {
         return;
       }
