@@ -10,6 +10,8 @@ actix-files = "0.6.2"
 actix-web = "4.1.0"
 ammonia = "3.2.1"
 awc = { version = "3.0.1", features = ["openssl"] }
-futures = "0.3.24"
+html5ever = "0.26.0"
+markup5ever_rcdom = "0.2.0"
+# futures = "0.3.24"
 serde = { version = "1.0.144", features = ["derive"] }
 serde_json = "1.0.85"

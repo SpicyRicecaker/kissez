@@ -6,10 +6,9 @@ use std::{error::Error, io, slice::Chunks};
 
 use actix_web::{
     post,
-    web::{self, Bytes},
-    App, HttpRequest, HttpResponse, HttpServer, Responder,
+    web::{self, Bytes, JsonBody},
+    App, HttpRequest, HttpResponse, HttpServer, Responder, error,
 };
-use futures::StreamExt;
 // use serde::Deserialize;
 
 // #[derive(Deserialize)]
@@ -29,31 +28,18 @@ fn parse_html(byte_content: Bytes) -> io::Result<String> {
 }
 
 #[post("/curl")]
-async fn curl(mut payload: web::Payload) -> Result<impl Responder, Box<dyn Error>> {
-    let mut body = web::BytesMut::new();
-
-    while let Some(chunk) = payload.next().await {
-        body.extend_from_slice(&chunk?);
-    }
-
-    // dbg!("request received", std::str::from_utf8(&body)?);
-
-    let shit: Book = serde_json::from_slice(&body)?;
-
-    dbg!(shit);
-    // dbg!("body content was", body.);
-
+async fn curl(book: web::Json<Book>, req: HttpRequest) -> Result<impl Responder, Box<dyn Error>> {
     // client code from https://docs.rs/awc/latest/awc/ & discovered on actix github
     let mut client = awc::Client::default();
 
     let d = client.headers().unwrap();
     // we clone the headers, and I believe that this is legitimate because it
     // basically means that we're a proxy server
-    // *d = req.headers().clone();
+    *d = req.headers().clone();
 
     // make request to actual server now
-    // let req = client.get(&book.url);
-    let req = client.get("/bob.html");
+    let req = client.get(&book.url);
+    // let req = client.get("/bob.html");
 
     let mut res = req.send().await?;
 
@@ -78,6 +64,15 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .service(curl)
             .service(fs::Files::new("/", "../dist").index_file("index.html"))
+            .app_data(web::JsonConfig::default().error_handler(|err, _req| {
+                error::InternalError::from_response(
+                    "",
+                    HttpResponse::BadRequest()
+                        .content_type("application/json")
+                        .body(format!(r#"{{"error":"{}"}}"#, err)),
+                )
+                .into()
+            }))
     })
     .bind(("127.0.0.1", 8080))?
     .run()

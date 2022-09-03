@@ -81,14 +81,18 @@ const App: Component = () => {
   createEffect(async () => {
     if (state() === "/read" && contentDiv) {
       console.log(JSON.stringify(unwrap(books[selected()])));
-      // let res = await fetch(`/asdf.html`);
       let res = await fetch(`/curl`, {
         method: "POST",
+        headers: {
+          'Content-Type': "application/json"
+        },
         body: JSON.stringify(unwrap(books[selected()])),
       });
       if (!res.ok) {
         return;
       }
+      
+      const DEBUG_started = new Date();
 
       const cDocument = new DOMParser().parseFromString(
         await res.text(),
@@ -130,6 +134,7 @@ const App: Component = () => {
 
       prevAnchor.href = matchValue(books[selected()].prev, cDocument);
       nextAnchor.href = matchValue(books[selected()].next, cDocument);
+      console.log('parsing text took', DEBUG_started.getTime() - (new Date()).getTime(), 'ms');
     }
   });
 
