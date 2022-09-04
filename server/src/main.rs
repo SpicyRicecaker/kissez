@@ -1,13 +1,14 @@
 use actix_files as fs;
 // extremely good.
+use actix_web::{middleware::Logger, App};
 use ammonia::Builder;
 use server::Book;
 use std::{error::Error, io, slice::Chunks};
 
 use actix_web::{
-    post,
+    error, post,
     web::{self, Bytes, JsonBody},
-    App, HttpRequest, HttpResponse, HttpServer, Responder, error,
+    HttpRequest, HttpResponse, HttpServer, Responder,
 };
 // use serde::Deserialize;
 
@@ -60,10 +61,13 @@ async fn curl(book: web::Json<Book>, req: HttpRequest) -> Result<impl Responder,
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
+
     HttpServer::new(|| {
         App::new()
             .service(curl)
-            .service(fs::Files::new("/", "../dist").index_file("index.html"))
+            .service(fs::Files::new("/", "./static").index_file("index.html"))
+            .wrap(Logger::new("%a %r %s"))
             .app_data(web::JsonConfig::default().error_handler(|err, _req| {
                 error::InternalError::from_response(
                     "",

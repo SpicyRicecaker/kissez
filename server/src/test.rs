@@ -1,4 +1,5 @@
-use html5ever::{ParseOpts, tree_builder::TreeBuilderOpts, parse_document};
+use html5ever::{parse_document, tendril::TendrilSink, tree_builder::TreeBuilderOpts, ParseOpts};
+use markup5ever_rcdom::{Handle, NodeData, RcDom};
 
 use crate::*;
 
@@ -31,13 +32,14 @@ fn serde_exports() {
         }
     )
 }
+enum HandleType {
+    Open,
+    Close,
+}
 
 #[test]
-fn basic_inner_test () {
-    let html = r#"<div>
-    <div>hello world</div>
-    <div>goodbye world</div>
-    </div>"#;
+fn basic_inner_test() {
+    let html = r#"<div><div>hello world</div><div>goodbye world</div></div>"#.to_string();
 
     let opts = ParseOpts {
         tree_builder: TreeBuilderOpts {
@@ -46,13 +48,60 @@ fn basic_inner_test () {
         },
         ..Default::default()
     };
-    // let dom = parse_document(RcDom::default(), opts)
-    //     .from_utf8()
-    //     .read_from(&mut stdin.lock())
-    //     .unwrap()
+    let dom = parse_document(RcDom::default(), opts)
+        .from_utf8()
+        .read_from(&mut html.as_bytes())
+        .unwrap();
 
-    // let mut res: Vec<String> = vec![];
+    let mut to_visit: Vec<(&Handle, u8, HandleType)> = Vec::new();
 
-    // assert_eq!(res, vec![String::from("hello world"), String::from("goodbye world")]);
-    // initial test
+    to_visit.push((&dom.document, 0, HandleType::Open));
+
+    let mut res = String::new();
+    while let Some((node, indent, handle_type)) = to_visit.pop() {
+        for _ in 0..indent {
+            res.push(' ');
+        }
+        match handle_type {
+            HandleType::Open => {
+                match node.data {
+                    // if it's document simply add children
+                    NodeData::Document => {}
+                    NodeData::Element {
+                        ref name,
+                        ref attrs,
+                        ..
+                    } => {
+                        res.push('<');
+                        res.push_str(&name.local);
+                        for attr in attrs.borrow().iter() {
+                            res.push(' ');
+                            res.push_str(&attr.name.local);
+                            res.push_str("=\"");
+                            res.push_str(&attr.value);
+                            res.push('"');
+                        }
+                        res.push('>');
+                        // to_visit.push((&Handle))
+                    }
+                    NodeData::Text { ref contents } => {
+                        res.push_str(&contents.borrow());
+                    }
+                    _ => {}
+                }
+            }
+            HandleType::Close => {}
+        }
+        res.push('\n');
+        // print!(" ".);
+    }
+
+    assert_eq!(
+        res,
+        r##"<div>
+    <div>hello world</div>
+    <div>goodbye world</div>
+</div>
+    "##
+    );
 }

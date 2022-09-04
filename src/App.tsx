@@ -8,10 +8,15 @@ import {
   Show,
   Switch,
   batch,
+  untrack,
 } from "solid-js";
-import { createMutable, modifyMutable, reconcile, unwrap } from "solid-js/store";
+import {
+  createMutable,
+  modifyMutable,
+  reconcile,
+  unwrap,
+} from "solid-js/store";
 
-// import logo from "./logo.svg";
 import styles from "./App.module.scss";
 import { SelectorEdit } from "./Selector";
 
@@ -47,8 +52,6 @@ const App: Component = () => {
 
   const [selected, setSelected] = createSignal(-1);
 
-  const [editingMode, setEditingMode] = createSignal(EditingMode.Regular);
-
   const multipleSelected = createMutable([] as boolean[]);
 
   const [state, setState] = createSignal("/" as State);
@@ -57,85 +60,126 @@ const App: Component = () => {
   let prevAnchor: HTMLAnchorElement;
   let nextAnchor: HTMLAnchorElement;
 
-  // const [editMode, setEditMode] = createSignal(false);
-
   // for `/` pages by default, set the state
-  history.replaceState(
-    { state: state(), selected: selected() as number },
-    "",
-    "/"
-  );
+  // history.replaceState(
+  //   { state: state(), selected: selected() as number },
+  //   "",
+  //   "/"
+  // );
 
-  window.addEventListener("popstate", (e: PopStateEvent) => {
-    setState(e.state.state);
-    setSelected(e.state.selected);
-  });
+  // window.addEventListener("popstate", (e: PopStateEvent) => {
+  //   setState(e.state.state);
+  //   setSelected(e.state.selected);
+  // });
 
   const navigate = (e: MouseEvent) => {
     setState("/");
     // navigate to custom `/read` url
-    history.pushState({ state: "/", selected: selected() }, "", "/");
-    e.preventDefault();
+    // history.pushState({ state: "/", selected: selected() }, "", "/");
+    // e.preventDefault();
   };
 
-  createEffect(async () => {
-    if (state() === "/read" && contentDiv) {
-      console.log(JSON.stringify(unwrap(books[selected()])));
-      let res = await fetch(`/curl`, {
-        method: "POST",
-        headers: {
-          'Content-Type': "application/json"
-        },
-        body: JSON.stringify(unwrap(books[selected()])),
-      });
-      if (!res.ok) {
-        return;
-      }
-      
-      const DEBUG_started = new Date();
+  createEffect(() => {
+    const _ = [state(), books[selected()]?.url];
+    untrack(async () => {
+      if (state() === "/read") {
+        let res = await fetch(`/curl`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(unwrap(books[selected()])),
+        });
 
-      const cDocument = new DOMParser().parseFromString(
-        await res.text(),
-        "text/html"
-      );
+        if (!res.ok) {
+          return;
+        }
+        console.log(
+          `successfully requested information from ${
+            books[selected()].url
+          } without error`
+        );
 
-      // console.log("rerunning parsing of document", books[selected()].url);
-      for (let i = 0; i < books[selected()].blacklist.length; i++) {
-        switch (books[selected()].blacklist[i].type) {
-          case "css": {
-            cDocument
-              .querySelector(books[selected()].blacklist[i].value)
-              ?.remove();
-            break;
-          }
-          case "innerHTML": {
-            // xpath
-            (
-              cDocument.evaluate(
-                `//*[text()['${
-                  books[selected()].blacklist[i].value
-                }' = normalize-space()]]`,
-                cDocument,
-                null,
-                // see https://developer.mozilla.org/en-US/docs/Web/XPath/Introduction_to_using_XPath_in_JavaScript
-                // any unordered node is like `find()`, it gets the first node
-                XPathResult.FIRST_ORDERED_NODE_TYPE,
-                null
-              )?.singleNodeValue as HTMLElement | null
-            )?.remove();
-          }
-          default: {
-            break;
+        const DEBUG_started = new Date();
+
+        const cDocument = new DOMParser().parseFromString(
+          await res.text(),
+          "text/html"
+        );
+
+        for (let i = 0; i < books[selected()].blacklist.length; i++) {
+          switch (books[selected()].blacklist[i].type) {
+            case "css": {
+              cDocument
+                .querySelector(books[selected()].blacklist[i].value)
+                ?.remove();
+              break;
+            }
+            case "innerHTML": {
+              // xpath
+              (
+                cDocument.evaluate(
+                  `//*[text()['${
+                    books[selected()].blacklist[i].value
+                  }' = normalize-space()]]`,
+                  cDocument,
+                  null,
+                  // see https://developer.mozilla.org/en-US/docs/Web/XPath/Introduction_to_using_XPath_in_JavaScript
+                  // any unordered node is like `find()`, it gets the first node
+                  XPathResult.FIRST_ORDERED_NODE_TYPE,
+                  null
+                )?.singleNodeValue as HTMLElement | null
+              )?.remove();
+            }
+            default: {
+              break;
+            }
           }
         }
+
+        {
+          const content = matchValue(books[selected()].content, cDocument);
+          if (content.length !== 0) {
+            contentDiv.innerHTML = content;
+          } else {
+            contentDiv.innerHTML = `could not locate query ${
+              books[selected()].content.value
+            } via ${books[selected()].content.type} on page ${
+              books[selected()].url
+            }`;
+          }
+        }
+
+        // if there doesn't exist an href, simply hide the prev and next div
+        {
+          const href = matchValue(books[selected()].prev, cDocument);
+          if (href.length !== 0) {
+            prevAnchor.href = href;
+            prevAnchor.style.display = "block";
+          } else {
+            prevAnchor.href = "";
+            prevAnchor.style.display = "none";
+          }
+        }
+
+        {
+          const href = matchValue(books[selected()].next, cDocument);
+          if (href.length !== 0) {
+            nextAnchor.href = href;
+            nextAnchor.style.display = "block";
+          } else {
+            nextAnchor.href = "";
+            nextAnchor.style.display = "none";
+          }
+        }
+
+        console.log(
+          "parsing text took",
+          DEBUG_started.getTime() - new Date().getTime(),
+          "ms"
+        );
       }
-
-      contentDiv.innerHTML = matchValue(books[selected()].content, cDocument);
-
-      prevAnchor.href = matchValue(books[selected()].prev, cDocument);
-      nextAnchor.href = matchValue(books[selected()].next, cDocument);
-      console.log('parsing text took', DEBUG_started.getTime() - (new Date()).getTime(), 'ms');
-    }
+    });
   });
 
   return (
@@ -143,7 +187,7 @@ const App: Component = () => {
       <Switch fallback={<></>}>
         <Match when={state() === "/"}>
           <div>
-            <div
+            <button
               onClick={() => {
                 books.push({
                   name: "[book name]",
@@ -165,8 +209,8 @@ const App: Component = () => {
               }}
             >
               +
-            </div>
-            <div
+            </button>
+            <button
               onClick={() => {
                 if (selected() === -1) {
                   return;
@@ -189,7 +233,7 @@ const App: Component = () => {
               }}
             >
               -
-            </div>
+            </button>
           </div>
           <For each={books}>
             {(book, i) => (
@@ -242,11 +286,11 @@ const App: Component = () => {
                     // then set state to reading
                     setState("/read");
                     // navigate to custom `/read` url
-                    history.pushState(
-                      { state: "/read", selected: selected() },
-                      "",
-                      "/read"
-                    );
+                    // history.pushState(
+                    //   { state: "/read", selected: selected() },
+                    //   "",
+                    //   "/read"
+                    // );
                   } else {
                     setSelected(i());
                     // flush all multiple selects and buffers
@@ -324,10 +368,10 @@ const App: Component = () => {
           </Show>
         </Match>
         <Match when={state() === "/read"}>
+          <a href="/" onClick={navigate}>
+            &lt;
+          </a>
           <div class={styles.anchorRow}>
-            <a href="/" onClick={navigate}>
-              &lt;
-            </a>
             <a
               ref={prevAnchor!}
               onClick={(e) => {
