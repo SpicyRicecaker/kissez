@@ -3,12 +3,12 @@ use actix_files as fs;
 use actix_web::{middleware::Logger, App};
 use ammonia::Builder;
 use server::Book;
-use std::{error::Error, io, slice::Chunks};
+use std::{error::Error, io};
 
 use actix_web::{
     error, post,
-    web::{self, Bytes, JsonBody},
-    HttpRequest, HttpResponse, HttpServer, Responder,
+    web::{self, Bytes},
+    HttpResponse, HttpServer, Responder,
 };
 // use serde::Deserialize;
 
@@ -29,18 +29,12 @@ fn parse_html(byte_content: Bytes) -> io::Result<String> {
 }
 
 #[post("/curl")]
-async fn curl(book: web::Json<Book>, req: HttpRequest) -> Result<impl Responder, Box<dyn Error>> {
+async fn curl(book: web::Json<Book>) -> Result<impl Responder, Box<dyn Error>> {
     // client code from https://docs.rs/awc/latest/awc/ & discovered on actix github
-    let mut client = awc::Client::default();
-
-    let d = client.headers().unwrap();
-    // we clone the headers, and I believe that this is legitimate because it
-    // basically means that we're a proxy server
-    *d = req.headers().clone();
+    let client = awc::Client::default();
 
     // make request to actual server now
     let req = client.get(&book.url);
-    // let req = client.get("/bob.html");
 
     let mut res = req.send().await?;
 

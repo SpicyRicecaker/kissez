@@ -32,9 +32,49 @@ fn serde_exports() {
         }
     )
 }
-enum HandleType {
-    Open,
-    Close,
+
+fn walk(handle: &Handle, indent: u8, res: &mut String) {
+    let node = handle;
+    for _ in 0..indent {
+        res.push(' ');
+    }
+
+    match node.data {
+        // if it's document simply add children
+        NodeData::Document => {
+            for child in node.children.borrow().iter() {
+                walk(child, 0, res);
+            }
+        }
+        NodeData::Element {
+            ref name,
+            ref attrs,
+            ..
+        } => {
+            res.push('<');
+            res.push_str(&name.local);
+            for attr in attrs.borrow().iter() {
+                res.push(' ');
+                res.push_str(&attr.name.local);
+                res.push_str("=\"");
+                res.push_str(&attr.value);
+                res.push('"');
+            }
+            res.push('>');
+            // res.push('\n');
+            for child in node.children.borrow().iter() {
+                walk(child, indent + 4, res);
+            }
+            res.push_str("</");
+            res.push_str(&name.local);
+            res.push('>');
+        }
+        // I'm not sure what this means
+        NodeData::Text { ref contents } => {
+            res.push_str(&contents.borrow());
+        }
+        _ => {}
+    }
 }
 
 #[test]
@@ -53,48 +93,8 @@ fn basic_inner_test() {
         .read_from(&mut html.as_bytes())
         .unwrap();
 
-    let mut to_visit: Vec<(&Handle, u8, HandleType)> = Vec::new();
-
-    to_visit.push((&dom.document, 0, HandleType::Open));
-
     let mut res = String::new();
-    while let Some((node, indent, handle_type)) = to_visit.pop() {
-        for _ in 0..indent {
-            res.push(' ');
-        }
-        match handle_type {
-            HandleType::Open => {
-                match node.data {
-                    // if it's document simply add children
-                    NodeData::Document => {}
-                    NodeData::Element {
-                        ref name,
-                        ref attrs,
-                        ..
-                    } => {
-                        res.push('<');
-                        res.push_str(&name.local);
-                        for attr in attrs.borrow().iter() {
-                            res.push(' ');
-                            res.push_str(&attr.name.local);
-                            res.push_str("=\"");
-                            res.push_str(&attr.value);
-                            res.push('"');
-                        }
-                        res.push('>');
-                        // to_visit.push((&Handle))
-                    }
-                    NodeData::Text { ref contents } => {
-                        res.push_str(&contents.borrow());
-                    }
-                    _ => {}
-                }
-            }
-            HandleType::Close => {}
-        }
-        res.push('\n');
-        // print!(" ".);
-    }
+    walk(&dom.document, 0, &mut res);
 
     assert_eq!(
         res,

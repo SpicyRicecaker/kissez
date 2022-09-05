@@ -4,10 +4,10 @@ import { Book, State } from "./App";
 
 export const AnchorRow: Component<{
   next: string | null;
+  prev: string | null;
   book: Book;
   setState: Setter<State>;
 }> = (props) => {
-  console.log(props.next, props.next == null);
   return (
     <div class={styles.anchorRow}>
       <a
@@ -37,7 +37,7 @@ export const AnchorRow: Component<{
             props.book.url = props.next!;
           }}
         >
-          nextasef
+          next
         </a>
       </Show>
     </div>
