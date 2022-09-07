@@ -6,7 +6,7 @@ import {
   useContext,
   createSignal,
 } from "solid-js";
-import { type State } from "./App";
+import { type State } from "../App";
 
 const StateContext = createContext<Signal<State>>();
 

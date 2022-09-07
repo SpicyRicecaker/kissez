@@ -23,12 +23,12 @@ import {
 import { AnchorRow } from "./AnchorRow";
 
 import styles from "./App.module.scss";
-import { useBooks } from "./BooksProvider";
-import MainPage from "./MainPage";
+import Shelf from "./Shelf";
 import Read from "./Read";
-import { useSelected } from "./SelectedProvider";
 import { SelectorEdit } from "./Selector";
-import { useState } from "./StateProvider";
+import { useSelected } from "./Providers/SelectedProvider";
+import { useBooks } from "./Providers/BooksProvider";
+import { useState } from "./Providers/StateProvider";
 
 export interface Book {
   name: string;
@@ -63,7 +63,7 @@ const App: Component = () => {
     <div id={styles.main} class={state() === "/" ? styles.root : ""}>
       <Switch>
         <Match when={state() === "/"}>
-          <MainPage />
+          <Shelf />
         </Match>
         <Match when={state() === "/read"}>
           <Read book={books[selected()]} />

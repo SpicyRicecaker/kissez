@@ -18,6 +18,7 @@ const Read: Component<{ book: Book }> = (props) => {
   //     untrack(async () => {
   //     });
   //   });
+
   (async () => {
     const res = await fetch(`/curl`, {
       method: "POST",

@@ -6,7 +6,7 @@ import {
   useContext,
 } from "solid-js";
 import { createMutable } from "solid-js/store";
-import { Book } from "./App";
+import { Book } from "../App";
 
 const BooksContext = createContext<Book[]>();
 

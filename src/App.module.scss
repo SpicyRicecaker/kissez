@@ -1,6 +1,8 @@
 :root {
-  --background: black;
-  --foreground: white;
+  // --background: black;
+  // --foreground: white;
+  --background: white;
+  --foreground: black;
 }
 
 html,
@@ -18,11 +20,6 @@ body {
   &.root {
     padding: 1rem;
   }
-}
-
-.selected {
-  background-color: var(--foreground);
-  color: var(--background);
 }
 
 .content {
@@ -53,8 +50,55 @@ body {
   }
 }
 
+#books {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+@font-face {
+  font-family: Iosevka;
+  src: url("assets/iosevka.woff2");
+}
+
 .book {
+  padding: 1rem;
+  border-radius: 1.5rem;
   cursor: default;
   user-select: none;
   -webkit-user-select: none;
+  font-family: Iosevka;
+  border: 2px solid black;
+
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+
+  & img {
+    width: 16px;
+  }
+  &.selected {
+    background-color: var(--foreground);
+    color: var(--background);
+    & img {
+      filter: invert(100%);
+    }
+  }
+}
+
+.book-title {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+}
+
+.book-url {
+  opacity: 50%;
+}
+
+.add {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
 }

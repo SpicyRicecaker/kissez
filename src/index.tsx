@@ -3,9 +3,9 @@ import { render } from "solid-js/web";
 
 import "./index.css";
 import App from "./App";
-import StateProvider from "./StateProvider";
-import BooksProvider from "./BooksProvider";
-import SelectedProvider from "./SelectedProvider";
+import StateProvider from "./Providers/StateProvider";
+import BooksProvider from "./Providers/BooksProvider";
+import SelectedProvider from "./Providers/SelectedProvider";
 
 render(
   () => (
