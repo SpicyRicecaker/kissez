@@ -3,8 +3,8 @@ import styles from "./App.module.scss";
 import { Book, State } from "./App";
 
 export const AnchorRow: Component<{
-  next: string | null;
-  prev: string | null;
+  next: string | undefined;
+  prev: string | undefined;
   book: Book;
   setState: Setter<State>;
 }> = (props) => {
@@ -19,7 +19,7 @@ export const AnchorRow: Component<{
       >
         &lt;
       </a>
-      <Show when={props.prev}>
+      <Show when={props.prev !== undefined}>
         <a
           href={props.prev!}
           onClick={(e) => {
@@ -30,7 +30,7 @@ export const AnchorRow: Component<{
           prev
         </a>
       </Show>
-      <Show when={props.next}>
+      <Show when={props.next !== undefined}>
         <a
           onClick={(e) => {
             e.preventDefault();

@@ -55,8 +55,11 @@ const App: Component = () => {
 
   let contentDiv: HTMLDivElement;
 
-  const customHref: { prev: string | null; next: string | null } =
-    createMutable({ prev: "", next: "" });
+  const customHref: { prev: string | undefined; next: string | undefined } =
+    createMutable({
+      prev: "",
+      next: "",
+    });
 
   // DEBUGDEBUGDEBUG
   onMount(() => {
@@ -139,7 +142,7 @@ const App: Component = () => {
 
         {
           const content = matchValue(books[selected()].content, cDocument);
-          if (content !== null) {
+          if (content !== undefined) {
             contentDiv.innerHTML = content;
           } else {
             contentDiv.innerHTML = `could not locate query ${
@@ -370,47 +373,32 @@ const App: Component = () => {
 
 export default App;
 
-function findInnerHTML(value: string, doc: Document): string | null {
+const findInnerText = (value: string, doc: Document): string | undefined =>
   // Search all nodes for text that contains value
-  const res = doc.evaluate(
-    `//*[text()['${value}' = normalize-space()]]`,
-    doc,
-    null,
-    // see https://developer.mozilla.org/en-US/docs/Web/XPath/Introduction_to_using_XPath_in_JavaScript
-    // any unordered node is like `find()`, it gets the first node
-    XPathResult.FIRST_ORDERED_NODE_TYPE,
-    null
-  );
+  (
+    doc.evaluate(
+      `//a[@href and .//*[contains(text(), "${value}")] or contains(text(), "${value}")]`,
+      doc,
+      null,
+      // see https://developer.mozilla.org/en-US/docs/Web/XPath/Introduction_to_using_XPath_in_JavaScript
+      // `FIRST_ORDERED_NODE_TYPE` node is like `find()`, it gets the first node
+      XPathResult.FIRST_ORDERED_NODE_TYPE,
+      null
+    ).singleNodeValue as HTMLAnchorElement | undefined
+  )?.href;
 
-  if (res.singleNodeValue) {
-    let node: HTMLElement | null = res.singleNodeValue as HTMLElement;
-    do {
-      if (node.hasAttribute("href")) {
-        return (node as HTMLAnchorElement).href;
-      }
-      node = node.parentElement;
-    } while (node != null);
-  }
-  return null;
-}
-
-function matchValue(inquisitor: Selector, doc: Document): string | null {
+function matchValue(inquisitor: Selector, doc: Document): string | undefined {
   // first match selector
   switch (inquisitor.type) {
     case "innerHTML": {
-      return findInnerHTML(inquisitor.value, doc);
+      return findInnerText(inquisitor.value, doc);
     }
     case "css": {
-      const el = doc.querySelector(inquisitor.value);
-      if (el) {
-        return el.innerHTML;
-      } else {
-        return null;
-      }
+      return doc.querySelector(inquisitor.value)?.innerHTML;
     }
     default: {
       // unreachable
-      return null;
+      return undefined;
     }
   }
 }
