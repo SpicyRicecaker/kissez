@@ -10,7 +10,7 @@ import {
 const SelectedContext = createContext<Signal<number>>();
 
 const SelectedProvider: Component<{ children: JSXElement }> = (props) => {
-  const stateSignal = createSignal(-1);
+  const stateSignal = createSignal(1);
 
   return (
     <SelectedContext.Provider value={stateSignal}>

@@ -24,6 +24,7 @@ import minus from "./assets/minus.svg";
 import plus from "./assets/plus.svg";
 import box from "./assets/box.svg";
 import pen from "./assets/pen.svg";
+import moon from "./assets/moon.svg";
 
 const Shelf: Component = () => {
   const multipleSelected = createMutable([] as boolean[]);
@@ -34,7 +35,7 @@ const Shelf: Component = () => {
 
   createEffect(() => {
     console.log(selected());
-  })
+  });
 
   return (
     <>
@@ -62,7 +63,7 @@ const Shelf: Component = () => {
         src={minus}
         style="color: white; width: 2.5rem"
       ></img>
-      <div class={styles.add}>
+      <div id={styles.add}>
         <img
           style="color: white; width: 2.5rem"
           src={plus}
@@ -76,11 +77,11 @@ const Shelf: Component = () => {
               },
               next: {
                 value: "",
-                type: "innerHTML",
+                type: "innerText",
               },
               prev: {
                 value: "",
-                type: "innerHTML",
+                type: "innerText",
               },
               blacklist: [],
             });
@@ -167,68 +168,22 @@ const Shelf: Component = () => {
                 <span>{book.name}</span>
                 <span class={styles["book-url"]}>{book.url}</span>
               </div>
-              <div>
+              <div
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setSelected(i());
+                  setState("/config");
+                }}
+                class={styles["book-edit"]}
+              >
                 <img src={pen}></img>
               </div>
             </div>
           )}
         </For>
+        <img src={moon} style="width: 2.5rem"></img>
       </div>
-      <Show when={selected() !== -1}>
-        <div>
-          <label>
-            name
-            <input
-              onInput={(e: InputEvent) =>
-                (books[selected()].name = (e.target as any).value)
-              }
-              value={books[selected()].name}
-            ></input>
-          </label>
-          <label>
-            url
-            <input
-              onInput={(e: InputEvent) =>
-                (books[selected()].url = (e.target as any).value)
-              }
-              value={books[selected()].url}
-            ></input>
-          </label>
-          <Index each={["prev", "next", "content"]}>
-            {(p) => (
-              <SelectorEdit
-                ident={p()}
-                selector={books[selected()][p() as keyof Book] as Selector}
-              />
-            )}
-          </Index>
-          <Index each={books[selected()].blacklist}>
-            {(_, i) => (
-              <>
-                <SelectorEdit
-                  ident={`blacklist-${i}`}
-                  selector={books[selected()].blacklist[i]}
-                />
-                <button
-                  onClick={() => books[selected()].blacklist.splice(i, 1)}
-                >
-                  -
-                </button>
-              </>
-            )}
-          </Index>
-          <button
-            onClick={() =>
-              books[selected()].blacklist.push({
-                value: "",
-                type: "css",
-              } as Selector)
-            }
-          >
-            +
-          </button>
-        </div>
-      </Show>
     </>
   );
 };

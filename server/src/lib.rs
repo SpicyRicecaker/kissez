@@ -7,8 +7,8 @@ mod test;
 pub enum Kind {
     #[serde(rename = "css")]
     Css,
-    #[serde(rename = "innerHTML")]
-    InnerHTML,
+    #[serde(rename = "innerText")]
+    InnerText,
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
@@ -16,8 +16,8 @@ pub enum Kind {
 pub enum Selector {
     #[serde(rename = "css")]
     Css { value: String },
-    #[serde(rename = "innerHTML")]
-    InnerHTML { value: String },
+    #[serde(rename = "innerText")]
+    InnerText { value: String },
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]

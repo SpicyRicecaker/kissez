@@ -29,6 +29,7 @@ import { SelectorEdit } from "./Selector";
 import { useSelected } from "./Providers/SelectedProvider";
 import { useBooks } from "./Providers/BooksProvider";
 import { useState } from "./Providers/StateProvider";
+import Config from "./Config";
 
 export interface Book {
   name: string;
@@ -41,10 +42,10 @@ export interface Book {
 
 export interface Selector {
   value: string;
-  type: "css" | "innerHTML";
+  type: "css" | "innerText";
 }
 
-export type State = "/" | "/read";
+export type State = "/" | "/read" | "/config";
 
 const App: Component = () => {
   // DEBUGDEBUGDEBUG
@@ -60,13 +61,16 @@ const App: Component = () => {
   const [selected] = useSelected();
 
   return (
-    <div id={styles.main} class={state() === "/" ? styles.root : ""}>
+    <div id={styles.main} class={state() === "/read" ? styles.root : ""}>
       <Switch>
         <Match when={state() === "/"}>
           <Shelf />
         </Match>
         <Match when={state() === "/read"}>
           <Read book={books[selected()]} />
+        </Match>
+        <Match when={state() === "/config"}>
+          <Config book={books[selected()]} />
         </Match>
       </Switch>
     </div>

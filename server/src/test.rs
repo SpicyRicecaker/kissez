@@ -7,7 +7,7 @@ use crate::*;
 fn serde_exports() {
     let book: Book = serde_json::from_str(
         r#"
-  {"name":"LOCALHOSTTEST","url":"http://localhost:8080/bob.html","content":{"value":".content","type":"css"},"next":{"value":"Next:","type":"innerHTML"},"prev":{"value":"Prev:","type":"innerHTML"},"blacklist":[{"value":".simplesocialbuttons","type":"css"}]}
+  {"name":"LOCALHOSTTEST","url":"http://localhost:8080/bob.html","content":{"value":".content","type":"css"},"next":{"value":"Next:","type":"innerText"},"prev":{"value":"Prev:","type":"innerText"},"blacklist":[{"value":".simplesocialbuttons","type":"css"}]}
 "#,
     )
     .unwrap();
@@ -20,10 +20,10 @@ fn serde_exports() {
             content: Selector::Css {
                 value: String::from(".content"),
             },
-            next: Selector::InnerHTML {
+            next: Selector::InnerText {
                 value: String::from("Next:"),
             },
-            prev: Selector::InnerHTML {
+            prev: Selector::InnerText {
                 value: String::from("Prev:"),
             },
             blacklist: vec![Selector::Css {
