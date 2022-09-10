@@ -2,6 +2,8 @@
 
 A frontend for manga scraping & reading, keeping it simple and stupid.
 
+![image](https://user-images.githubusercontent.com/54951411/189483622-c5b84420-d398-46c8-b06d-25c71b4a37d7.png)
+
 ## Installing
 
 Download the corresponding zip file from the releases page for your operating system. Unzip the file, and run the server executable. Finally, open `http://localhost:8080` in the browser.
