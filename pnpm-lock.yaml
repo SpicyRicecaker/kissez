@@ -2,12 +2,14 @@ lockfileVersion: 5.4
 
 specifiers:
   sass: ^1.54.8
+  solid-element: ^1.5.4
   solid-js: ^1.5.4
   typescript: ^4.8.2
   vite: ^3.0.9
   vite-plugin-solid: ^2.3.0
 
 dependencies:
+  solid-element: 1.5.4_solid-js@1.5.4
   solid-js: 1.5.4
 
 devDependencies:
@@ -475,6 +477,10 @@ packages:
     resolution: {integrity: sha512-72fSenhMw2HZMTVHeCA9KCmpEIbzWiQsjN+BHcBbS9vr1mtt+vJjPdksIBNUmKAW8TFUDPJK5SUU3QhE9NEXDw==}
     dev: true
 
+  /component-register/0.8.3:
+    resolution: {integrity: sha512-/0u8ov0WPWi2FL78rgB9aFOcfY8pJT4jP/l9NTOukGNLVQ6hk35sEJE1RkEnNQU3yk48Qr7HlDQjRQKEVfgeWg==}
+    dev: false
+
   /convert-source-map/1.8.0:
     resolution: {integrity: sha512-+OQdjP49zViI/6i7nIJpA8rAl4sV/JdPfU9nZs3VqOwGIgizICvuN2ru6fMd+4llL0tar18UYJXfZ/TWtmhUjA==}
     dependencies:
@@ -917,6 +923,15 @@ packages:
     resolution: {integrity: sha512-b39TBaTSfV6yBrapU89p5fKekE2m/NwnDocOVruQFS1/veMgdzuPcnOM34M6CwxW8jH/lxEa5rBoDeUwu5HHTw==}
     hasBin: true
     dev: true
+
+  /solid-element/1.5.4_solid-js@1.5.4:
+    resolution: {integrity: sha512-C3oAEeVeuVmy/h2/bBnMXmPlfBVEsQfZQveJobTtN/owJv7wTR5k9Gvnu5O4EMIGhJZZGjcs5Ga1cTc3LwpnrQ==}
+    peerDependencies:
+      solid-js: ^1.0.0
+    dependencies:
+      component-register: 0.8.3
+      solid-js: 1.5.4
+    dev: false
 
   /solid-js/1.5.4:
     resolution: {integrity: sha512-+65anSHhH27htkhP5LuC912fviMIckgc7/yN+WWrKhS9Kp3dvtDNl5/m4GWX1lpCvcubjShqJjGt16HET5z5Ig==}
