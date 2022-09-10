@@ -1,66 +1,64 @@
-import { Component, Index } from "solid-js";
-import { Book, Selector } from "./App";
-import { SelectorEdit } from "./Selector";
-import { useState } from "./Providers/StateProvider";
-import { useSelected } from "./Providers/SelectedProvider";
+import { Component, Index } from 'solid-js'
+import { Book, Selector } from './App'
+import { SelectorEdit } from './Selector'
+import { useState } from './Providers/StateProvider'
+import { useSelected } from './Providers/SelectedProvider'
 
-import styles from "./App.module.scss";
+import styles from './App.module.scss'
 
-import back from "./assets/back.svg";
-
-import minus from "./assets/minus.svg";
-import plus from "./assets/plus.svg";
+import SvgBack from './assets/back.svg?component'
+import SvgMinus from './assets/minus.svg?component'
+import SvgPlus from './assets/plus.svg?component'
 
 const Config: Component<{ book: Book }> = (props) => {
-  const [_, setState] = useState();
-  const [__, setSelected] = useSelected();
+  const setState = useState()[1]
+  const setSelected = useSelected()[1]
 
   return (
     <>
-      <img
+      <SvgBack
+        class={styles.svg}
         onClick={() => {
-          setState("/");
-          setSelected(-1);
+          setState('/')
+          setSelected(-1)
         }}
-        src={back}
-        id={styles.back}
-      ></img>
+      />
       <div id={styles.form}>
-        <div class={styles["form-input"]}>
+        <div class={styles['form-input']}>
           <input
             onInput={(e: InputEvent) =>
               (props.book.name = (e.target as any).value)
             }
             value={props.book.name}
-          ></input>
+          />
           <label>name</label>
         </div>
-        <div class={styles["form-input"]}>
+        <div class={styles['form-input']}>
           <input
             onInput={(e: InputEvent) =>
               (props.book.url = (e.target as any).value)
             }
             value={props.book.url}
-          ></input>
+          />
           <label>url</label>
         </div>
-        <Index each={["prev", "next", "content"]}>
+        <Index each={['prev', 'next', 'content']}>
           {(p) => (
             <>
-              <div class={styles["label"]}>
+              <div class={styles.label}>
                 {((): string => {
                   switch (p()) {
-                    case "prev": {
-                      return "previous chapter button";
+                    case 'prev': {
+                      return 'previous chapter button'
                     }
-                    case "next": {
-                      return "next chapter button";
+                    case 'next': {
+                      return 'next chapter button'
                     }
-                    case "content": {
-                      return "content";
+                    case 'content': {
+                      return 'content'
                     }
                     default: {
-                      return "";
+                      return ''
                     }
                   }
                 })()}
@@ -72,7 +70,7 @@ const Config: Component<{ book: Book }> = (props) => {
             </>
           )}
         </Index>
-        <div class={styles["label"]}>blacklist elements</div>
+        <div class={styles.label}>blacklist elements</div>
         <Index each={props.book.blacklist}>
           {(_, i) => (
             <>
@@ -80,31 +78,29 @@ const Config: Component<{ book: Book }> = (props) => {
                 ident={`blacklist-${i}`}
                 selector={props.book.blacklist[i]}
               />
-              <img
+              <SvgMinus
                 onClick={() => {
-                  props.book.blacklist.splice(i, 1);
+                  props.book.blacklist.splice(i, 1)
                 }}
-                src={minus}
-                style="color: white; width: 2.5rem"
-              ></img>
+                class={styles.svg}
+              />
             </>
           )}
         </Index>
 
-        <img
-          style="color: white; width: 2.5rem; margin: 0 auto;"
-          src={plus}
+        <SvgPlus
+          style={{ margin: '0 auto' }}
+          class={styles.svg}
           onClick={() =>
             props.book.blacklist.push({
-              name: "some random name",
-              value: "",
-              type: "css",
-            } as Selector)
+              value: '',
+              type: 'css'
+            })
           }
-        ></img>
+        />
       </div>
     </>
-  );
-};
+  )
+}
 
-export default Config;
+export default Config

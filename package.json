@@ -11,14 +11,20 @@
   },
   "license": "MIT",
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "5.0.0",
+    "eslint": "8.0.1",
+    "eslint-config-standard-with-typescript": "^22.0.0",
+    "eslint-plugin-import": "2.25.2",
+    "eslint-plugin-n": "15.0.0",
+    "eslint-plugin-promise": "6.0.0",
+    "eslint-plugin-solid": "^0.7.1",
     "sass": "^1.54.8",
-    "typescript": "^4.8.2",
+    "typescript": "*",
     "vite": "^3.0.9",
-    "vite-plugin-solid": "^2.3.0"
+    "vite-plugin-solid": "^2.3.0",
+    "vite-plugin-solid-svg": "^0.4.1"
   },
   "dependencies": {
-    "babel-preset-solid": "^1.5.4",
-    "solid-element": "^1.5.4",
     "solid-js": "^1.5.4"
   }
 }

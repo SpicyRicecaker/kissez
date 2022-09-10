@@ -1,94 +1,79 @@
-import {
-  createEffect,
-  For,
-  type Component,
-  untrack,
-  batch,
-  Show,
-  Index,
-} from "solid-js";
-import {
-  createMutable,
-  modifyMutable,
-  reconcile,
-  unwrap,
-} from "solid-js/store";
-import { Book, Selector, State } from "./App";
-import { useBooks } from "./Providers/BooksProvider";
-import { useSelected } from "./Providers/SelectedProvider";
-import { SelectorEdit } from "./Selector";
-import { useState } from "./Providers/StateProvider";
+import { For, type Component, batch } from 'solid-js'
+import { createMutable, modifyMutable, reconcile } from 'solid-js/store'
+import { useBooks } from './Providers/BooksProvider'
+import { useSelected } from './Providers/SelectedProvider'
+import { useState } from './Providers/StateProvider'
 
-import styles from "./App.module.scss";
-import minus from "./assets/minus.svg";
-import plus from "./assets/plus.svg";
-import box from "./assets/box.svg";
-import pen from "./assets/pen.svg";
-import moon from "./assets/moon.svg";
+import styles from './App.module.scss'
+import SvgMinus from './assets/minus.svg?component'
+import SvgPlus from './assets/plus.svg?component'
+import SvgBox from './assets/box.svg?component'
+import SvgPen from './assets/pen.svg?component'
+import SvgMoon from './assets/moon.svg?component'
 
 const Shelf: Component = () => {
-  const multipleSelected = createMutable([] as boolean[]);
+  const multipleSelected = createMutable([] as boolean[])
 
-  const [state, setState] = useState();
-  const books = useBooks();
-  const [selected, setSelected] = useSelected();
+  const setState = useState()[1]
+  const books = useBooks()
+  const [selected, setSelected] = useSelected()
 
-  createEffect(() => {
-    console.log(selected());
-  });
+  // createEffect(() => {
+  //   console.log(selected());
+  // });
 
   return (
     <>
-      <img
+      <SvgMinus
         onClick={() => {
           if (selected() === -1) {
-            return;
+            return
           }
           if (multipleSelected.length !== 0) {
             modifyMutable(
               books,
               reconcile(books.filter((_, i) => !multipleSelected[i]))
-            );
+            )
 
             batch(() => {
               while (multipleSelected.length !== 0) {
-                multipleSelected.pop();
+                multipleSelected.pop()
               }
-            });
+            })
           } else {
-            books.splice(selected(), 1);
+            books.splice(selected(), 1)
           }
-          setSelected(-1);
+          setSelected(-1)
         }}
-        src={minus}
-        style="color: white; width: 2.5rem"
-      ></img>
+        class={styles.svg}
+      />
+      <SvgMoon class={styles.svg} style={{ width: '2.5rem' }} />
+
       <div id={styles.add}>
-        <img
-          style="color: white; width: 2.5rem"
-          src={plus}
+        <SvgPlus
+          class={styles.svg}
           onClick={() => {
             books.push({
-              name: "[book name]",
-              url: "",
+              name: '[book name]',
+              url: '',
               content: {
-                value: "",
-                type: "css",
+                value: '',
+                type: 'css'
               },
               next: {
-                value: "",
-                type: "innerText",
+                value: '',
+                type: 'innerText'
               },
               prev: {
-                value: "",
-                type: "innerText",
+                value: '',
+                type: 'innerText'
               },
-              blacklist: [],
-            });
+              blacklist: []
+            })
           }}
         >
           +
-        </img>
+        </SvgPlus>
       </div>
       <div id={styles.books}>
         <For each={books}>
@@ -96,10 +81,10 @@ const Shelf: Component = () => {
             <div
               onClick={(e: MouseEvent) => {
                 if (e.ctrlKey || e.metaKey) {
-                  if (multipleSelected[i()] === true) {
-                    multipleSelected[i()] = false;
+                  if (multipleSelected[i()]) {
+                    multipleSelected[i()] = false
                   } else {
-                    multipleSelected[i()] = true;
+                    multipleSelected[i()] = true
                   }
                   // console.log(multipleSelected[i()]);
                   // console.log(
@@ -115,32 +100,32 @@ const Shelf: Component = () => {
                   // if and only if the pivot exists in the range of existing
                   // buffers, set that to the new pivot, then flush the
                   // current buffer
-                  return;
+                  return
                 }
 
                 if (e.shiftKey) {
-                  e.preventDefault();
+                  e.preventDefault()
                   if (selected() !== -1) {
                     // for every key from selected to and including current selection, revert its selected status
                     // buffer.active = true;
-                    const min = Math.min(i(), selected());
-                    const max = Math.max(i(), selected());
+                    const min = Math.min(i(), selected())
+                    const max = Math.max(i(), selected())
                     batch(() => {
                       while (multipleSelected.length !== 0) {
-                        multipleSelected.pop();
+                        multipleSelected.pop()
                       }
                       // buffer absorbs multiple selected
                       for (let x = min; x <= max; x++) {
-                        multipleSelected[x] = true;
+                        multipleSelected[x] = true
                       }
-                    });
+                    })
                   }
-                  return;
+                  return
                 }
 
                 if (i() === selected()) {
                   // then set state to reading
-                  setState("/read");
+                  setState('/read')
                   // navigate to custom `/read` url
                   // history.pushState(
                   //   { state: "/read", selected: selected() },
@@ -148,44 +133,43 @@ const Shelf: Component = () => {
                   //   "/read"
                   // );
                 } else {
-                  setSelected(i());
+                  setSelected(i())
                   // flush all multiple selects and buffers
                   batch(() => {
                     while (multipleSelected.length !== 0) {
-                      multipleSelected.pop();
+                      multipleSelected.pop()
                     }
-                  });
+                  })
                 }
               }}
               class={`${
-                selected() === i() || multipleSelected[i()] === true
+                selected() === i() || multipleSelected[i()]
                   ? styles.selected
-                  : ""
+                  : ''
               } ${styles.book}`}
             >
-              <div class={styles["book-title"]}>
-                <img src={box}></img>
+              <div class={styles['book-title']}>
+                <SvgBox style={{ width: '16px' }} />
                 <span>{book.name}</span>
-                <span class={styles["book-url"]}>{book.url}</span>
+                <span class={styles['book-url']}>{book.url}</span>
               </div>
               <div
                 onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setSelected(i());
-                  setState("/config");
+                  e.preventDefault()
+                  e.stopPropagation()
+                  setSelected(i())
+                  setState('/config')
                 }}
-                class={styles["book-edit"]}
+                class={styles['book-edit']}
               >
-                <img src={pen}></img>
+                <SvgPen style={{ width: '16px' }} />
               </div>
             </div>
           )}
         </For>
-        <img src={moon} style="width: 2.5rem"></img>
       </div>
     </>
-  );
-};
+  )
+}
 
-export default Shelf;
+export default Shelf

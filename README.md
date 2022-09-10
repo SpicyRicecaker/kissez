@@ -1,34 +1,38 @@
-## Usage
+# KISSEZ
 
-Those templates dependencies are maintained via [pnpm](https://pnpm.io) via `pnpm up -Lri`.
+A frontend for manga scraping & reading, keeping it simple and stupid.
 
-This is the reason you see a `pnpm-lock.yaml`. That being said, any package manager will work. This file can be safely be removed once you clone a template.
+## Installing
 
-```bash
-$ npm install # or pnpm install or yarn install
+Download the corresponding zip file from the releases page for your operating system. Unzip the file, and run the server executable. Finally, open `http://localhost:8080` in the browser.
+
+If you're on MacOS or binary releases are not available, you can also compile manually.
+
+### Pre Reqs
+
+Install `cargo`, `node`, and `pnpm`, then clone this repo.
+
+```shell
+git clone https://github.com/SpicyRicecaker/kissez.git
+pnpm i
+pnpm dist
+cd server && cargo run --release
+# or cargo build --release if you don't want to open the binary right away
 ```
 
-### Learn more on the [Solid Website](https://solidjs.com) and come chat with us on our [Discord](https://discord.com/invite/solidjs)
+## Developing
 
-## Available Scripts
+To run things in development, clone this repository, initialize the (currently private) submodules, then
 
-In the project directory, you can run:
+```shell
+# in the root directory
+# initialize the server, which is in charge of making cross-origin requests
+cd server && cargo run
+# frontend that the server serves
+pnpm i
+pnpm run dev
+```
 
-### `npm dev` or `npm start`
+The vite server opens on port 3000, and during development proxies requests to the rust server on port 8080, while enabling live reload. Check the `server` section of `vite.config.ts` for more details.
 
-Runs the app in the development mode.<br>
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
-
-The page will reload if you make edits.<br>
-
-### `npm run build`
-
-Builds the app for production to the `dist` folder.<br>
-It correctly bundles Solid in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.<br>
-Your app is ready to be deployed!
-
-## Deployment
-
-You can deploy the `dist` folder to any static host provider (netlify, surge, now, etc.)
+Highly recommend disabling `eslint` during development.

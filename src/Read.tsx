@@ -1,62 +1,75 @@
-import { batch, Component, createSignal, onMount } from "solid-js";
-import { createMutable, unwrap } from "solid-js/store";
-import { AnchorRow } from "./AnchorRow";
-import { Book, Selector } from "./App";
-import styles from "./App.module.scss";
+import { batch, Component, createEffect, createSignal, Show } from 'solid-js'
+import { createMutable } from 'solid-js/store'
+import { untrack } from 'solid-js/web'
+import { AnchorRow } from './AnchorRow'
+import { type Book, type Selector } from './App'
+import styles from './App.module.scss'
 
-import { useState } from "./Providers/StateProvider";
+import Timer from './Timer'
 
 const Read: Component<{ book: Book }> = (props) => {
-  const [_, setState] = useState();
+  let contentDiv: HTMLDivElement
 
-  let contentDiv: HTMLDivElement;
+  interface CustomHref {
+    prev: string | undefined
+    next: string | undefined
+  }
 
-  const customHref: { prev: string | undefined; next: string | undefined } =
-    createMutable({
-      prev: undefined,
-      next: undefined,
-    });
+  const customHref: CustomHref = createMutable({
+    prev: undefined,
+    next: undefined
+  })
 
-  (async () => {
-    console.log(JSON.stringify(unwrap(props.book)));
-    const res = await fetch(`/curl`, {
-      method: "POST",
+  const [ready, setReady] = createSignal(false)
+
+  createEffect((): void => {
+    // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+    const _ = props.book.url
+    void untrack(initBook)
+  })
+
+  const initBook = async (): Promise<void> => {
+    setReady(false)
+    const res = await fetch('/curl', {
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify(props.book),
-    });
+      body: JSON.stringify(props.book)
+    })
 
     if (!res.ok) {
-      return;
+      setReady(true)
+      return
     }
 
-    console.log(
-      `successfully requested information from ${props.book.url} without error`
-    );
+    // console.log(
+    //   `successfully requested information from ${props.book.url} without error`
+    // );
 
-    const DEBUG_started = new Date();
+    // const DEBUG_started = new Date();
 
     const cDocument = new DOMParser().parseFromString(
       await res.text(),
-      "text/html"
-    );
+      'text/html'
+    )
 
     // if there doesn't exist an href, simply hide the prev and next div
     batch(() => {
-      customHref.prev = matchValue(props.book.prev, cDocument);
-      customHref.next = matchValue(props.book.next, cDocument);
-    });
+      customHref.prev = matchValue(props.book.prev, cDocument)
+      customHref.next = matchValue(props.book.next, cDocument)
+    })
 
     for (let i = 0; i < props.book.blacklist.length; i++) {
       switch (props.book.blacklist[i].type) {
-        case "css": {
-          cDocument.querySelector(props.book.blacklist[i].value)?.remove();
-          break;
+        case 'css': {
+          cDocument.querySelector(props.book.blacklist[i].value)?.remove()
+          break
         }
-        case "innerText": {
+        case 'innerText': {
           // xpath
-          (
+          // eslint-disable-next-line no-extra-semi
+          ;(
             cDocument.evaluate(
               `//*[text()['${props.book.blacklist[i].value}' = normalize-space()]]`,
               cDocument,
@@ -66,51 +79,58 @@ const Read: Component<{ book: Book }> = (props) => {
               XPathResult.FIRST_ORDERED_NODE_TYPE,
               null
             )?.singleNodeValue as HTMLElement | null
-          )?.remove();
+          )?.remove()
+          break
         }
         default: {
-          break;
+          break
         }
       }
     }
 
-    {
-      const content = matchValue(props.book.content, cDocument);
-      if (content !== undefined) {
-        contentDiv!.innerHTML = content;
-      } else {
-        contentDiv!.innerHTML = `could not locate query ${props.book.content.value} via ${props.book.content.type} on page ${props.book.url}`;
-      }
+    const content = matchValue(props.book.content, cDocument)
+    if (content !== undefined) {
+      contentDiv!.innerHTML = content
+    } else {
+      contentDiv!.innerHTML = `could not locate query ${props.book.content.value} via ${props.book.content.type} on page ${props.book.url}`
     }
 
-    console.log(
-      "parsing text took",
-      DEBUG_started.getTime() - new Date().getTime(),
-      "ms"
-    );
-  })();
+    // console.log(
+    //   "parsing text took",
+    //   DEBUG_started.getTime() - new Date().getTime(),
+    //   "ms"
+    // );
+
+    setReady(true)
+  }
 
   return (
     <>
-      <AnchorRow
-        next={customHref.next}
-        prev={customHref.prev}
-        book={props.book}
-      />
-      <div class={styles.content} ref={contentDiv!}></div>
-      <AnchorRow
-        next={customHref.next}
-        prev={customHref.prev}
-        book={props.book}
-      />
+      <Show when={ready()}>
+        <AnchorRow
+          next={customHref.next}
+          prev={customHref.prev}
+          book={props.book}
+        />
+      </Show>
+      <div class={styles.content} ref={contentDiv!} />
+      <Show when={ready()}>
+        <AnchorRow
+          next={customHref.next}
+          prev={customHref.prev}
+          book={props.book}
+        />
+      </Show>
+      <Show when={!ready()}>
+        <Timer />
+      </Show>
     </>
-  );
-};
+  )
+}
 
-export default Read;
+export default Read
 
 const findInnerText = (value: string, doc: Document): string | undefined => {
-  console.log("FINDING", value);
   // Search all nodes for text that contains value
   return (
     doc.evaluate(
@@ -122,21 +142,24 @@ const findInnerText = (value: string, doc: Document): string | undefined => {
       XPathResult.FIRST_ORDERED_NODE_TYPE,
       null
     ).singleNodeValue as HTMLAnchorElement | undefined
-  )?.href;
-};
+  )?.href
+}
 
-function matchValue(inquisitor: Selector, doc: Document): string | undefined {
+const matchValue = (
+  inquisitor: Selector,
+  doc: Document
+): string | undefined => {
   // first match selector
   switch (inquisitor.type) {
-    case "innerText": {
-      return findInnerText(inquisitor.value, doc);
+    case 'innerText': {
+      return findInnerText(inquisitor.value, doc)
     }
-    case "css": {
-      return doc.querySelector(inquisitor.value)?.innerHTML;
+    case 'css': {
+      return doc.querySelector(inquisitor.value)?.innerHTML
     }
     default: {
       // unreachable
-      return undefined;
+      return undefined
     }
   }
 }
