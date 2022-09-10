@@ -6,6 +6,8 @@ A frontend for manga scraping & reading, keeping it simple and stupid.
 
 Download the corresponding zip file from the releases page for your operating system. Unzip the file, and run the server executable. Finally, open `http://localhost:8080` in the browser.
 
+On linux, run `chmod +rwx server` to make the server file executable. 
+
 If you're on MacOS or binary releases are not available, you can also compile manually.
 
 ### Pre Reqs
