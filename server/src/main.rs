@@ -55,6 +55,7 @@ async fn curl(book: web::Json<Book>) -> Result<impl Responder, Box<dyn Error>> {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    println!("Starting server at http://localhost:8080");
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
 
     HttpServer::new(|| {
