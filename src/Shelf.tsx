@@ -24,53 +24,62 @@ const Shelf: Component<{ setDark: Setter<boolean> }> = (props) => {
 
   return (
     <>
-      <SvgMinus
-        onClick={() => {
-          if (selected() === -1) {
-            return
-          }
-          if (multipleSelected.length !== 0) {
-            modifyMutable(
-              books,
-              reconcile(books.filter((_, i) => !multipleSelected[i]))
-            )
-
-            batch(() => {
-              while (multipleSelected.length !== 0) {
-                multipleSelected.pop()
-              }
-            })
-          } else {
-            books.splice(selected(), 1)
-          }
-          setSelected(-1)
+      <div
+        style={{
+          display: 'flex',
+          'flex-direction': 'row',
+          gap: '1rem',
+          'padding-bottom': '1rem'
         }}
-        class={styles.svg}
-      />
-      <SvgMoon
-        onClick={() => props.setDark((prev) => !prev)}
-        class={styles.svg}
-        style={{ width: '2.5rem' }}
-      />
+      >
+        <SvgMinus
+          onClick={() => {
+            if (selected() === -1) {
+              return
+            }
+            if (multipleSelected.length !== 0) {
+              modifyMutable(
+                books,
+                reconcile(books.filter((_, i) => !multipleSelected[i]))
+              )
+
+              batch(() => {
+                while (multipleSelected.length !== 0) {
+                  multipleSelected.pop()
+                }
+              })
+            } else {
+              books.splice(selected(), 1)
+            }
+            setSelected(-1)
+          }}
+          class={styles.svg}
+        />
+        <SvgMoon
+          onClick={() => props.setDark((prev) => !prev)}
+          class={styles.svg}
+          style={{ width: '2.5rem' }}
+        />
+      </div>
 
       <div id={styles.add}>
         <SvgPlus
           class={styles.svg}
           onClick={() => {
             books.push({
-              name: '[book name]',
-              url: '',
-              content: {
-                value: '',
-                type: 'css'
+              name: 'Example',
+              url: 'http://localhost:8080/example.html',
+              prev: {
+                value: 'Previous:',
+                type: 'innerText'
               },
               next: {
-                value: '',
+                value: 'Next:',
                 type: 'innerText'
               },
-              prev: {
-                value: '',
-                type: 'innerText'
+              content: {
+                value: '.content',
+                type: 'css'
               },
               blacklist: []
             })
