@@ -1,4 +1,11 @@
-import { type Component, Match, Switch, onMount } from 'solid-js'
+import {
+  type Component,
+  Match,
+  Switch,
+  onMount,
+  createSignal,
+  createEffect
+} from 'solid-js'
 
 import styles from './App.module.scss'
 import Shelf from './Shelf'
@@ -37,11 +44,31 @@ const App: Component = () => {
   const books = useBooks()
   const [selected] = useSelected()
 
+  const [dark, setDark] = createSignal(
+    ((): boolean => {
+      const a = localStorage.getItem('dark')
+      if (a) {
+        return JSON.parse(a)
+      } else {
+        return window.matchMedia('(prefers-color-scheme: dark)').matches
+      }
+    })()
+  )
+  createEffect(() => {
+    localStorage.setItem('dark', dark().toString())
+    console.log(dark())
+  })
+
   return (
-    <div id={styles.main} class={state() === '/read' ? styles.root : ''}>
+    <div
+      id={styles.main}
+      class={`${state() === '/read' ? styles.root : ''} ${
+        dark() ? styles.dark : styles.light
+      }`}
+    >
       <Switch>
         <Match when={state() === '/'}>
-          <Shelf />
+          <Shelf setDark={setDark} />
         </Match>
         <Match when={state() === '/read'}>
           <Read book={books[selected()]} />

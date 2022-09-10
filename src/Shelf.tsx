@@ -1,4 +1,4 @@
-import { For, type Component, batch } from 'solid-js'
+import { For, type Component, batch, type Setter } from 'solid-js'
 import { createMutable, modifyMutable, reconcile } from 'solid-js/store'
 import { useBooks } from './Providers/BooksProvider'
 import { useSelected } from './Providers/SelectedProvider'
@@ -11,7 +11,7 @@ import SvgBox from './assets/box.svg?component'
 import SvgPen from './assets/pen.svg?component'
 import SvgMoon from './assets/moon.svg?component'
 
-const Shelf: Component = () => {
+const Shelf: Component<{ setDark: Setter<boolean> }> = (props) => {
   const multipleSelected = createMutable([] as boolean[])
 
   const setState = useState()[1]
@@ -47,7 +47,11 @@ const Shelf: Component = () => {
         }}
         class={styles.svg}
       />
-      <SvgMoon class={styles.svg} style={{ width: '2.5rem' }} />
+      <SvgMoon
+        onClick={() => props.setDark((prev) => !prev)}
+        class={styles.svg}
+        style={{ width: '2.5rem' }}
+      />
 
       <div id={styles.add}>
         <SvgPlus
