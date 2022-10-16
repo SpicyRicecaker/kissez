@@ -181,6 +181,43 @@ const Shelf: Component<{ setDark: Setter<boolean> }> = (props) => {
           )}
         </For>
       </div>
+      <button
+        onClick={() => {
+          const handleFile = async () => {
+            const file = input.files?.item(0)
+            if (!file) {
+              return
+            }
+            const tempBooks = JSON.parse(await file.text())
+            modifyMutable(books, reconcile(tempBooks))
+
+            input.removeEventListener('change', handleFile)
+          }
+          const input = document.createElement('input')
+
+          input.addEventListener('change', handleFile)
+          input.type = 'file'
+          input.accept = 'application/json'
+          input.click()
+        }}
+      >
+        import
+      </button>
+      <button
+        onClick={() => {
+          const file = new File([JSON.stringify(books)], 'books.json', {
+            type: 'application/json'
+          })
+          const url = URL.createObjectURL(file)
+
+          const a = document.createElement('a')
+          a.download = 'true'
+          a.href = url
+          a.click()
+        }}
+      >
+        export
+      </button>
     </>
   )
 }

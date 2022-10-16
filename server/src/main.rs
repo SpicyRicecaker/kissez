@@ -1,6 +1,6 @@
 use actix_files as fs;
 // extremely good.
-use actix_web::{middleware::Logger, App};
+use actix_web::{http::header, middleware::Logger, App};
 use ammonia::Builder;
 use server::Book;
 use std::{error::Error, io};
@@ -46,11 +46,13 @@ async fn curl(book: web::Json<Book>) -> Result<impl Responder, Box<dyn Error>> {
 
     let mut builder = HttpResponse::build(res.status());
 
-    res.headers().iter().for_each(|h| {
-        builder.append_header(h);
-    });
+    builder.append_header((header::ACCESS_CONTROL_ALLOW_ORIGIN, "*"));
 
-    Ok(HttpResponse::build(res.status()).body(body))
+    // res.headers().iter().for_each(|h| {
+    //     builder.append_header(h);
+    // });
+
+    Ok(builder.body(body))
 }
 
 #[actix_web::main]
